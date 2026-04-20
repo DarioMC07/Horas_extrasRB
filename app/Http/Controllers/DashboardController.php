@@ -38,11 +38,17 @@ class DashboardController extends Controller
         ];
 
         // Datos para gráficas
-        // 1. Horas por tipo (Dona)
-        $chartHorasPorTipo = HoraExtra::select('tipo_hora', DB::raw('SUM(cantidad_horas) as total'))
-            ->where('estado', 'aprobado')
-            ->groupBy('tipo_hora')
-            ->pluck('total', 'tipo_hora')->toArray();
+        // 1. Tendencia de horas extras aprobadas (últimos 6 meses) - Línea
+        $chartTendencia = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $fecha = now()->subMonths($i);
+            $total = HoraExtra::where('estado', 'aprobado')
+                ->whereMonth('fecha', $fecha->month)
+                ->whereYear('fecha', $fecha->year)
+                ->sum('cantidad_horas');
+            $chartTendencia->put($fecha->translatedFormat('M Y'), (float) $total);
+        }
+        $chartTendencia = $chartTendencia->toArray();
 
         // 2. Top 5 empleados con más horas (Barras horizontales)
         $topEmpleados = HoraExtra::select('empleado_id', DB::raw('SUM(cantidad_horas) as total'))
@@ -64,7 +70,7 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('dashboard.admin', compact('kpis', 'chartHorasPorTipo', 'topEmpleados', 'ultimasPendientes'));
+        return view('dashboard.admin', compact('kpis', 'chartTendencia', 'topEmpleados', 'ultimasPendientes'));
     }
 
     private function dashboardEmpleado($user)
