@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test:e2e": "mocha test/e2e/**/*.spec.js --timeout 15000"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
@@ -14,7 +15,9 @@
         "axios": ">=1.11.0 <=1.14.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.0.0",
+        "mocha": "^11.7.5",
         "postcss": "^8.4.31",
+        "selenium-webdriver": "^4.43.0",
         "tailwindcss": "^3.1.0",
         "vite": "^8.0.0"
     }
