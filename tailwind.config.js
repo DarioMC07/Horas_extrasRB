@@ -12,7 +12,23 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                'wise-black': '#0e0f0c',
+                'wise-green': '#9fe870',
+                'wise-dark-green': '#163300',
+                'wise-mint': '#e2f6d5',
+                'wise-pastel': '#cdffad',
+                'wise-positive': '#054d28',
+                'wise-danger': '#d03238',
+                'wise-warning': '#ffd11a',
+                'wise-orange': '#ffc091',
+                'wise-warm-dark': '#454745',
+                'wise-gray': '#868685',
+                'wise-light': '#e8ebe6',
+                'wise-bg': '#f9fbf7',
+                'wise-surface': '#ffffff',
             },
         },
     },

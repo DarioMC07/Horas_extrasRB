@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Reportes y Análisis</h1>
-        <p class="page-subtitle">Consulta y exportación de registros de horas extras</p>
+        <p class="page-subtitle">Consulta y exportación de registros</p>
     </div>
 </div>
 
@@ -66,7 +66,7 @@
                 <tr>
                     <td><strong>{{ $he->empleado->nombre_completo ?? 'N/A' }}</strong></td>
                     <td>
-                        <span class="text-sm" style="color: var(--color-muted);">
+                        <span class="text-sm" style="color: var(--color-gray);">
                             {{ $he->empleado->cedula ?? '' }}<br>
                             {{ $he->empleado->cargo ?? '' }}
                         </span>

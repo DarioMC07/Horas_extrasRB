@@ -82,7 +82,6 @@
                 </label>
                 <input type="date" name="fecha" id="fecha"
                        value="{{ date('Y-m-d') }}" required>
-                {{-- El tipo se asigna por defecto como "normal" --}}
                 <input type="hidden" name="tipo_hora" value="normal">
             </div>
         @endif
@@ -109,7 +108,7 @@
         </div>
 
         <div style="margin-top: 1.75rem;">
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.7rem;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
                 Enviar Solicitud
             </button>
             <p class="field-hint text-center mt-2">

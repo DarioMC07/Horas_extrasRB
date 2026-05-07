@@ -16,16 +16,15 @@
     </a>
 </div>
 
-<!-- KPIs -->
 <div class="grid-cols-3">
     <div class="card kpi-card">
         <span class="kpi-label">Mis Horas Aprobadas (Mes)</span>
-        <span class="kpi-value" style="color: var(--color-success);">{{ number_format($kpis['mis_horas_mes'], 1) }}h</span>
+        <span class="kpi-value">{{ number_format($kpis['mis_horas_mes'], 1) }}h</span>
         <span class="kpi-trend">Horas autorizadas este período</span>
     </div>
     <div class="card kpi-card">
         <span class="kpi-label">Pendientes de Aprobación</span>
-        <span class="kpi-value" style="color: var(--color-warning);">{{ $kpis['mis_pendientes'] }}</span>
+        <span class="kpi-value" style="color: #7a6200;">{{ $kpis['mis_pendientes'] }}</span>
         <span class="kpi-trend">En espera de revisión gerencial</span>
     </div>
     <div class="card kpi-card">
@@ -64,7 +63,7 @@
                     <tr>
                         <td>{{ $he->fecha->format('d/m/Y') }}</td>
                         <td><strong>{{ $he->cantidad_horas }}h</strong></td>
-                        <td style="color: var(--color-muted);">{{ Str::limit($he->motivo, 45) }}</td>
+                        <td style="color: var(--color-gray);">{{ Str::limit($he->motivo, 45) }}</td>
                         <td><span class="badge {{ $he->badge_class }}">{{ ucfirst($he->estado) }}</span></td>
                     </tr>
                     @endforeach
