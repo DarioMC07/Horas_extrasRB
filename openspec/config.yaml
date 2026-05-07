@@ -1,0 +1,61 @@
+schema: spec-driven
+
+# Documentación de contexto que el agente debe leer antes de generar cualquier artefacto.
+docs:
+  - doc/PROJECT_CONTEXT.md
+
+context: |
+  Project: Horas Extras Rosa Betania
+  Language: Spanish (todos los artefactos en español)
+  Domain: Sistema Web de Gestión y Análisis de Horas Extras para imprenta.
+
+  Stack:
+    - Backend: Laravel 11.x + PHP 8.3
+    - Base de datos: MySQL (Eloquent ORM exclusivamente, sin SQL crudo)
+    - Frontend: Blade + TailwindCSS ^3/^4 + Alpine.js ^3.4 + Vite
+    - Gráficos: Lightweight Charts ^5.2 (solo para dashboards)
+    - Auth: Laravel Breeze
+
+  Architecture: MVC Monolítico (ver doc/PROJECT_CONTEXT.md)
+
+  Roles del sistema:
+    - Empleado: registra solicitudes, consulta su historial.
+    - Supervisor: pre-aprueba o rechaza las horas de su turno/área.
+    - Administrador (RRHH): aprobación final, configuración de límites, exportaciones.
+
+  Ciclo de vida de una hora extra (estados):
+    pendiente → pre_aprobada → aprobada | rechazada
+
+  Convenciones de código:
+    - Rutas POST/PUT/DELETE protegidas con middleware auth + rol.
+    - CSS solo mediante clases utilitarias de Tailwind en vistas Blade.
+    - JS reactivo con Alpine.js declarativo; Vanilla JS solo para Lightweight Charts.
+    - Exportaciones CSV via Laravel streams para optimizar memoria.
+    - Estética: glassmorphism, transiciones suaves, diseño "premium".
+
+rules:
+  proposal:
+    - Redactar estrictamente en español.
+    - Enfocarse en el valor de negocio: trazabilidad, prevención de errores de pago, métricas.
+    - Evitar código fuente o rutas de archivos; centrarse en impacto, alcance, objetivos y no-objetivos.
+    - Indicar cómo afecta el cambio a cada rol (Empleado, Supervisor, Administrador).
+    - Mencionar si el cambio impacta el ciclo de vida de estados (pendiente/pre_aprobada/aprobada/rechazada).
+
+  specs:
+    - Escribir como contrato de comportamiento, no como manual técnico.
+    - Describir el resultado para el usuario final y las validaciones de negocio.
+    - Incluir escenarios de error y casos borde (ej. límite de horas superado, rechazo sin comentario).
+    - Excluir estructura de base de datos, comandos Artisan o rutas específicas.
+
+  design:
+    - Orientar decisiones a la arquitectura Laravel: Controladores, Modelos Eloquent, Vistas Blade.
+    - Especificar clases TailwindCSS y comportamientos Alpine.js para la UI.
+    - Detallar migraciones y relaciones Eloquent (belongsTo, hasMany, etc.).
+    - Indicar middleware de protección para cada ruta nueva.
+    - Si hay exportación, mencionar uso de Laravel streams.
+
+  tasks:
+    - Tareas granulares y 100% accionables (ej. "Crear migración X", "Agregar scope Y al modelo").
+    - Incluir tareas de verificación: validaciones de formulario, roles en Middleware, pruebas manuales.
+    - No repetir contenido de propuesta o diseño; solo instrucciones de implementación.
+    - Ordenar tareas por capa: Base de datos → Modelos → Controladores → Vistas → Tests.
