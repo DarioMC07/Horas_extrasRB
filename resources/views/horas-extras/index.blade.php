@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Horas Extras</h1>
-        <p class="page-subtitle">Registro y seguimiento de solicitudes</p>
+        <p class="page-subtitle">Seguimiento y gestión de solicitudes</p>
     </div>
     @if(!auth()->user()->isAdmin())
         <a href="{{ route('horas-extras.create') }}" class="btn btn-primary">
@@ -13,18 +13,18 @@
                  fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Registrar Nueva Solicitud
+            Nueva Solicitud
         </a>
     @endif
 </div>
 
 <div class="card">
     <form method="GET" action="{{ route('horas-extras.index') }}"
-          style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap;">
-        <div style="min-width: 180px;">
+          style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap;">
+        <div style="min-width: 200px;">
             <label for="estado">Filtrar por Estado</label>
             <select name="estado" id="estado" onchange="this.form.submit()">
-                <option value="">— Todos los estados —</option>
+                <option value="">— Todos —</option>
                 <option value="pendiente" {{ request('estado') === 'pendiente' ? 'selected' : '' }}>Pendientes</option>
                 <option value="aprobado"  {{ request('estado') === 'aprobado'  ? 'selected' : '' }}>Aprobadas</option>
                 <option value="rechazado" {{ request('estado') === 'rechazado' ? 'selected' : '' }}>Rechazadas</option>
@@ -32,7 +32,7 @@
         </div>
 
         @if(request('estado'))
-            <a href="{{ route('horas-extras.index') }}" class="btn btn-ghost" style="align-self: flex-end;">
+            <a href="{{ route('horas-extras.index') }}" class="btn btn-ghost">
                 Limpiar filtro
             </a>
         @endif
@@ -62,7 +62,7 @@
                     @endif
                     <td>
                         @if($he->turno)
-                            <span style="font-size: 0.8rem;">
+                            <span style="font-size: 0.8rem; font-weight: 500;">
                                 {{ $he->turno->hora_inicio }} — {{ $he->turno->hora_fin }}
                             </span>
                         @else

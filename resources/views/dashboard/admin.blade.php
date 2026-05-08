@@ -4,24 +4,23 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Dashboard Administrativo</h1>
-        <p class="page-subtitle">Resumen de operaciones del mes actual</p>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Resumen de horas extras del mes</p>
     </div>
     <a href="{{ route('horas-extras.index') }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18l6-6-6-6"/>
         </svg>
-        Ver Todas las Solicitudes
+        Ver Solicitudes
     </a>
 </div>
 
-<!-- KPIs -->
 <div class="grid-cols-3">
     <div class="card kpi-card">
         <span class="kpi-label">Horas Aprobadas (Mes)</span>
         <span class="kpi-value">{{ number_format($kpis['total_horas_aprobadas'], 1) }}h</span>
-        <span class="kpi-trend">Horas extra autorizadas en el período</span>
+        <span class="kpi-trend">Horas autorizadas en el período</span>
     </div>
     <div class="card kpi-card">
         <span class="kpi-label">Solicitudes Pendientes</span>
@@ -30,30 +29,34 @@
     </div>
     <div class="card kpi-card">
         <span class="kpi-label">Empleados Activos</span>
-        <span class="kpi-value" style="color: var(--color-secondary);">{{ $kpis['empleados_activos'] }}</span>
+        <span class="kpi-value">{{ $kpis['empleados_activos'] }}</span>
         <span class="kpi-trend">Personal registrado en el sistema</span>
     </div>
 </div>
 
 <div class="grid-cols-2">
-    <!-- Chart: Tendencia Últimos 6 Meses -->
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Tendencia de Horas Extras — Últimos 6 Meses</span>
+            <span class="card-title">Tendencia — Últimos 6 Meses</span>
         </div>
-        <canvas id="chartTendencia" style="max-height: 220px;"></canvas>
+        <div id="chartTendencia" style="width: 100%; height: 240px;"></div>
     </div>
 
-    <!-- Chart: Top Empleados -->
     <div class="card">
         <div class="card-header">
             <span class="card-title">Top 5 Empleados — Mes Actual</span>
         </div>
-        <canvas id="chartTopEmpleados"></canvas>
+        <div id="chartTopEmpleados" style="width: 100%; height: 240px;"></div>
     </div>
 </div>
 
-<!-- Últimas solicitudes pendientes -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Distribución Semanal — Histograma</span>
+    </div>
+    <div id="chartHistogram" style="width: 100%; height: 180px;"></div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <span class="card-title">Últimas Solicitudes Pendientes</span>
@@ -103,85 +106,126 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Gráfica Línea — Tendencia 6 meses
-        const ctxTend = document.getElementById('chartTendencia').getContext('2d');
-        const dataTend = @json($chartTendencia);
+document.addEventListener('DOMContentLoaded', function() {
+    const chartOptions = {
+        layout: {
+            background: { type: ColorType.Solid, color: 'transparent' },
+            textColor: '#868685',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 11,
+        },
+        grid: {
+            vertLines: { color: 'rgba(14, 15, 12, 0.08)' },
+            horzLines: { color: 'rgba(14, 15, 12, 0.08)' },
+        },
+        crosshair: {
+            mode: CrosshairMode.Normal,
+            vertLine: { color: '#9fe870', width: 1, style: 2, labelBackgroundColor: '#163300' },
+            horzLine: { color: '#9fe870', width: 1, style: 2, labelBackgroundColor: '#163300' },
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(14, 15, 12, 0.12)',
+            textColor: '#868685',
+        },
+        timeScale: {
+            borderColor: 'rgba(14, 15, 12, 0.12)',
+            timeVisible: false,
+        },
+        handleScroll: false,
+        handleScale: false,
+    };
 
-        new Chart(ctxTend, {
-            type: 'line',
-            data: {
-                labels: Object.keys(dataTend),
-                datasets: [{
-                    label: 'Horas Aprobadas',
-                    data: Object.values(dataTend),
-                    borderColor: '#16A34A',
-                    backgroundColor: 'rgba(22, 163, 74, 0.08)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#16A34A',
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.4
-                }]
+    const rawTendencia = @json($chartTendencia);
+    // Construir mapa time -> label para el formatter del eje X
+    const tendenciaLabelMap = {};
+    rawTendencia.forEach(d => { tendenciaLabelMap[d.time] = d.label; });
+    const tendencyData = rawTendencia.map(d => ({ time: d.time, value: d.value }));
+
+    const chart1 = createChart(document.getElementById('chartTendencia'), {
+        ...chartOptions,
+        width: document.getElementById('chartTendencia').clientWidth,
+        height: 240,
+        timeScale: {
+            ...chartOptions.timeScale,
+            tickMarkFormatter: (time) => {
+                const key = typeof time === 'object'
+                    ? `${time.year}-${String(time.month).padStart(2,'0')}-01`
+                    : time;
+                return tendenciaLabelMap[key] || key;
             },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        grid: { color: '#E2E8E2' },
-                        ticks: { color: '#6B7280', font: { family: 'Inter', size: 11 } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#E2E8E2' },
-                        ticks: { color: '#6B7280', font: { family: 'Inter', size: 11 } }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ` ${ctx.parsed.y}h aprobadas`
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gráfica Barras — Top Empleados
-        const ctxTop = document.getElementById('chartTopEmpleados').getContext('2d');
-        const dataTop = @json($topEmpleados);
-
-        new Chart(ctxTop, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(dataTop),
-                datasets: [{
-                    label: 'Horas Aprobadas',
-                    data: Object.values(dataTop),
-                    backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                    borderColor: '#16A34A',
-                    borderWidth: 1.5,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                scales: {
-                    x: {
-                        grid: { color: '#E2E8E2' },
-                        ticks: { color: '#6B7280', font: { family: 'Inter', size: 11 } }
-                    },
-                    y: {
-                        grid: { display: false },
-                        ticks: { color: '#374151', font: { family: 'Inter', size: 12 } }
-                    }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
+        },
     });
+    const lineSeries = chart1.addSeries(LineSeries, {
+        color: '#9fe870',
+        lineWidth: 2.5,
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 5,
+        crosshairMarkerBorderColor: '#163300',
+        crosshairMarkerBackgroundColor: '#9fe870',
+        priceFormat: { type: 'custom', formatter: v => `${v.toFixed(1)}h` },
+    });
+    lineSeries.setData(tendencyData);
+    chart1.timeScale().fitContent();
+
+    const dataTop = @json($topEmpleados);
+    const topLabels = Object.keys(dataTop);
+    const topValues = Object.values(dataTop);
+    const chart2 = createChart(document.getElementById('chartTopEmpleados'), {
+        ...chartOptions,
+        width: document.getElementById('chartTopEmpleados').clientWidth,
+        height: 240,
+    });
+    // lightweight-charts requiere time en formato YYYY-MM-DD o timestamp numérico.
+    // Usamos fechas ficticias consecutivas como índice para los empleados.
+    const baseDate = new Date('2024-01-01');
+    const barData = topLabels.map((label, i) => {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() + i);
+        return {
+            time: d.toISOString().slice(0, 10),
+            value: topValues[i],
+            color: '#9fe870',
+        };
+    });
+    chart2.applyOptions({
+        timeScale: {
+            ...chartOptions.timeScale,
+            tickMarkFormatter: (time) => {
+                // LWC v5 pasa time como objeto {year, month, day}
+                const key = typeof time === 'object'
+                    ? `${time.year}-${String(time.month).padStart(2,'0')}-${String(time.day).padStart(2,'0')}`
+                    : time;
+                const idx = barData.findIndex(d => d.time === key);
+                return idx !== -1 ? topLabels[idx] : key;
+            },
+        },
+    });
+    const barSeries = chart2.addSeries(HistogramSeries, {
+        color: '#9fe870',
+        priceFormat: { type: 'custom', formatter: v => `${v.toFixed(0)}h` },
+    });
+    barSeries.setData(barData);
+    chart2.timeScale().fitContent();
+
+    const histData = @json($chartHistogram);
+    const chart3 = createChart(document.getElementById('chartHistogram'), {
+        ...chartOptions,
+        width: document.getElementById('chartHistogram').clientWidth,
+        height: 180,
+        rightPriceScale: { ...chartOptions.rightPriceScale, scaleMargins: { top: 0.1, bottom: 0 } },
+    });
+    const histSeries = chart3.addSeries(HistogramSeries, {
+        color: '#9fe870',
+        priceFormat: { type: 'custom', formatter: v => `${v.toFixed(0)}h` },
+    });
+    histSeries.setData(histData);
+    chart3.timeScale().fitContent();
+
+    window.addEventListener('resize', () => {
+        chart1.resize(document.getElementById('chartTendencia').clientWidth, 240);
+        chart2.resize(document.getElementById('chartTopEmpleados').clientWidth, 240);
+        chart3.resize(document.getElementById('chartHistogram').clientWidth, 180);
+    });
+});
 </script>
 @endsection

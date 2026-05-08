@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horas Extras — Rosa Betania</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @vite('resources/js/app.js')
 </head>
 <body>
     <div class="app-wrapper">

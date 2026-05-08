@@ -39,16 +39,21 @@ class DashboardController extends Controller
 
         // Datos para gráficas
         // 1. Tendencia de horas extras aprobadas (últimos 6 meses) - Línea
-        $chartTendencia = collect();
+        // La key DEBE ser yyyy-mm-dd (primer día del mes);
+        // el label legible se aplica en JS con tickMarkFormatter.
+        $chartTendencia = [];
         for ($i = 5; $i >= 0; $i--) {
             $fecha = now()->subMonths($i);
             $total = HoraExtra::where('estado', 'aprobado')
                 ->whereMonth('fecha', $fecha->month)
                 ->whereYear('fecha', $fecha->year)
                 ->sum('cantidad_horas');
-            $chartTendencia->put($fecha->translatedFormat('M Y'), (float) $total);
+            $chartTendencia[] = [
+                'time'  => $fecha->format('Y-m-01'),
+                'value' => (float) $total,
+                'label' => $fecha->translatedFormat('M Y'),
+            ];
         }
-        $chartTendencia = $chartTendencia->toArray();
 
         // 2. Top 5 empleados con más horas (Barras horizontales)
         $topEmpleados = HoraExtra::select('empleado_id', DB::raw('SUM(cantidad_horas) as total'))
@@ -60,17 +65,40 @@ class DashboardController extends Controller
             ->with('empleado')
             ->get()
             ->mapWithKeys(function ($item) {
-                return [$item->empleado->nombre_completo => $item->total];
+                return [$item->empleado->nombre_completo => (float) $item->total];
             })->toArray();
 
-        // 3. Últimas solicitudes pendientes (Tabla rápida)
+        // 3. Datos para histograma (Lightweight Charts) - últimas 6 semanas del mes actual
+        $chartHistogram = collect();
+        $seenWeeks = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $fecha       = now()->subWeeks($i)->copy();
+            $weekStart   = $fecha->copy()->startOfWeek();
+            $weekEnd     = $fecha->copy()->endOfWeek();
+            $timeKey     = $weekStart->format('Y-m-d');
+
+            if (in_array($timeKey, $seenWeeks)) continue;
+            $seenWeeks[] = $timeKey;
+
+            $total = HoraExtra::where('estado', 'aprobado')
+                ->whereBetween('fecha', [$weekStart->toDateString(), $weekEnd->toDateString()])
+                ->sum('cantidad_horas');
+            $chartHistogram->push([
+                'time'  => $timeKey,
+                'value' => (float) $total,
+                'color' => $total > 0 ? '#9fe870' : 'rgba(159,232,112,0.2)',
+            ]);
+        }
+        $chartHistogram = $chartHistogram->toArray();
+
+        // 4. Últimas solicitudes pendientes (Tabla rápida)
         $ultimasPendientes = HoraExtra::with('empleado')
             ->where('estado', 'pendiente')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('dashboard.admin', compact('kpis', 'chartTendencia', 'topEmpleados', 'ultimasPendientes'));
+        return view('dashboard.admin', compact('kpis', 'chartTendencia', 'topEmpleados', 'chartHistogram', 'ultimasPendientes'));
     }
 
     private function dashboardEmpleado($user)

@@ -34,12 +34,12 @@
 
         <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
             <input type="checkbox" id="remember_me" name="remember">
-            <label for="remember_me" style="margin: 0; font-weight: 400; color: var(--color-muted); cursor: pointer;">
+            <label for="remember_me" style="margin: 0; font-weight: 500; color: var(--color-gray); cursor: pointer;">
                 Recordar sesión
             </label>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 0.7rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 0.75rem;">
             Ingresar al Sistema
         </button>
     </form>

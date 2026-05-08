@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Solicitud #{{ $horasExtra->id }}</h1>
-        <p class="page-subtitle">Detalle completo de la solicitud de horas extras</p>
+        <p class="page-subtitle">Detalle completo de la solicitud</p>
     </div>
     <a href="{{ route('horas-extras.index') }}" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
@@ -18,7 +18,6 @@
 
 <div class="grid-cols-2">
 
-    <!-- Información General -->
     <div class="card">
         <div class="card-header">
             <span class="card-title">Información General</span>
@@ -28,44 +27,43 @@
         <table style="border: none;">
             <tbody>
                 <tr>
-                    <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); width: 40%; font-size: 0.8125rem; font-weight: 600;">Empleado</td>
-                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->empleado->nombre_completo ?? 'N/A' }}</td>
+                    <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); width: 40%; font-size: 0.8125rem; font-weight: 700;">Empleado</td>
+                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->empleado->nombre_completo ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600;">Departamento</td>
-                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->empleado->departamento ?? 'N/A' }}</td>
+                    <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); font-size: 0.8125rem; font-weight: 700;">Departamento</td>
+                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->empleado->departamento ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600;">Fecha de Ejecución</td>
-                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->fecha->format('d/m/Y') }}</td>
+                    <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); font-size: 0.8125rem; font-weight: 700;">Fecha de Ejecución</td>
+                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->fecha->format('d/m/Y') }}</td>
                 </tr>
                 <tr>
-                    <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600;">Horas Solicitadas</td>
-                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;"><strong>{{ $horasExtra->cantidad_horas }} horas</strong></td>
+                    <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); font-size: 0.8125rem; font-weight: 700;">Horas Solicitadas</td>
+                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 800; color: var(--color-dark-green);">{{ $horasExtra->cantidad_horas }} horas</td>
                 </tr>
                 <tr>
-                    <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600;">Tipo de Tarifa</td>
-                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->tipo_hora_label }}</td>
+                    <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); font-size: 0.8125rem; font-weight: 700;">Tipo de Tarifa</td>
+                    <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->tipo_hora_label }}</td>
                 </tr>
             </tbody>
         </table>
 
         <div style="margin-top: 1.25rem;">
-            <p style="font-size: 0.8125rem; font-weight: 600; color: var(--color-muted); margin-bottom: 0.5rem;">
+            <p style="font-size: 0.75rem; font-weight: 700; color: var(--color-gray); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em;">
                 Motivo o Justificación
             </p>
-            <p style="background-color: var(--color-surface-2); padding: 0.875rem 1rem; border-radius: var(--radius-md);
-                       font-size: 0.875rem; line-height: 1.6; border: 1px solid var(--color-border);">
+            <p style="background-color: var(--color-mint); padding: 0.875rem 1rem; border-radius: var(--radius-md);
+                       font-size: 0.875rem; line-height: 1.6; font-weight: 500; color: var(--color-dark-green); border: var(--shadow-ring);">
                 {{ $horasExtra->motivo }}
             </p>
         </div>
     </div>
 
-    <!-- Estado de Aprobación -->
     <div class="card">
         <div class="card-header">
             <span class="card-title">Estado de Aprobación</span>
-            <span class="badge {{ $horasExtra->badge_class }}" style="font-size: 0.75rem;">
+            <span class="badge {{ $horasExtra->badge_class }}">
                 {{ ucfirst($horasExtra->estado) }}
             </span>
         </div>
@@ -75,24 +73,24 @@
             <table style="border: none;">
                 <tbody>
                     <tr>
-                        <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); width: 45%; font-size: 0.8125rem; font-weight: 600;">Evaluado por</td>
-                        <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->aprobadoPor->name ?? 'N/A' }}</td>
+                        <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); width: 45%; font-size: 0.8125rem; font-weight: 700;">Evaluado por</td>
+                        <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->aprobadoPor->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td style="border: none; padding: 0.5rem 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600;">Fecha de Decisión</td>
-                        <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem;">{{ $horasExtra->fecha_aprobacion->format('d/m/Y H:i') }}</td>
+                        <td style="border: none; padding: 0.5rem 0; color: var(--color-gray); font-size: 0.8125rem; font-weight: 700;">Fecha de Decisión</td>
+                        <td style="border: none; padding: 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: var(--color-black);">{{ $horasExtra->fecha_aprobacion->format('d/m/Y H:i') }}</td>
                     </tr>
                 </tbody>
             </table>
 
             @if($horasExtra->observaciones_admin)
                 <div style="margin-top: 1.25rem;">
-                    <p style="font-size: 0.8125rem; font-weight: 600; color: var(--color-muted); margin-bottom: 0.5rem;">
+                    <p style="font-size: 0.75rem; font-weight: 700; color: var(--color-gray); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em;">
                         Observaciones del Responsable
                     </p>
                     <p style="background-color: var(--color-danger-bg); padding: 0.875rem 1rem;
                                border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.6;
-                               color: var(--color-danger); border: 1px solid rgba(220,38,38,0.15);">
+                               color: var(--color-danger); font-weight: 600; border: 1px solid rgba(208,50,56,0.15);">
                         {{ $horasExtra->observaciones_admin }}
                     </p>
                 </div>
@@ -105,12 +103,12 @@
 
         @if(auth()->user()->isAdmin() && $horasExtra->estado === 'pendiente')
             <form action="{{ route('horas-extras.estado', $horasExtra->id) }}" method="POST"
-                  style="margin-top: 1.5rem; background-color: var(--color-surface-2);
-                         padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                  style="margin-top: 1.5rem; background-color: var(--color-mint);
+                         padding: 1.5rem; border-radius: var(--radius-lg); border: var(--shadow-ring);">
                 @csrf
                 @method('PATCH')
 
-                <p style="font-size: 0.8125rem; font-weight: 700; color: var(--color-text); margin-bottom: 1rem;">
+                <p style="font-size: 0.75rem; font-weight: 800; color: var(--color-dark-green); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em;">
                     Acción Gerencial
                 </p>
 
