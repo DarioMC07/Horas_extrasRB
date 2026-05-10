@@ -8,14 +8,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu } from 'lucide-react';
+import { Menu, MessageSquare } from 'lucide-react';
 
 interface TopbarProps {
     title?: string;
     onMenuClick: () => void;
+    onChatToggle?: () => void;
 }
 
-export default function Topbar({ title, onMenuClick }: TopbarProps) {
+export default function Topbar({ title, onMenuClick, onChatToggle }: TopbarProps) {
     const { auth } = usePage().props as any;
 
     const getInitials = (name: string) => {
@@ -59,7 +60,18 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
             </div>
 
             <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 sm:gap-3 rounded-lg p-1.5 sm:p-2 hover:bg-wise-light flex-shrink-0">
+                <div className="flex items-center gap-1">
+                    {onChatToggle && (
+                        <button
+                            onClick={onChatToggle}
+                            className="rounded-lg p-2 text-wise-gray hover:bg-wise-mint hover:text-wise-green transition-colors"
+                            aria-label="Abrir chat de consultas"
+                            title="Consultas NL"
+                        >
+                            <MessageSquare size={20} />
+                        </button>
+                    )}
+                    <DropdownMenuTrigger className="flex items-center gap-2 sm:gap-3 rounded-lg p-1.5 sm:p-2 hover:bg-wise-light flex-shrink-0">
                     <div className="hidden text-right lg:block">
                         <div className="text-sm font-medium text-wise-black">{auth?.user?.name}</div>
                         <div className="text-xs text-wise-gray">{getRoleLabel(auth?.user?.role)}</div>
@@ -89,6 +101,7 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
                         </Link>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
+                    </div>
             </DropdownMenu>
         </header>
     );
