@@ -6,6 +6,7 @@ use App\Models\Empleado;
 use App\Models\HoraExtra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -25,25 +26,20 @@ class DashboardController extends Controller
         $mesActual = now()->month;
         $anioActual = now()->year;
 
-        // KPIs principales
         $kpis = [
             'total_horas_aprobadas' => HoraExtra::where('estado', 'aprobado')
                 ->whereMonth('fecha', $mesActual)
                 ->whereYear('fecha', $anioActual)
                 ->sum('cantidad_horas'),
-                
+
             'solicitudes_pendientes' => HoraExtra::where('estado', 'pendiente')->count(),
-            
+
             'empleados_activos' => Empleado::where('activo', true)->count(),
         ];
 
-        // Datos para gráficas
-        // 1. Tendencia de horas extras aprobadas (últimos 6 meses) - Línea
-        // La key DEBE ser yyyy-mm-dd (primer día del mes);
-        // el label legible se aplica en JS con tickMarkFormatter.
         $chartTendencia = [];
         for ($i = 5; $i >= 0; $i--) {
-            $fecha = now()->subMonths($i);
+            $fecha = now()->copy()->subMonths($i);
             $total = HoraExtra::where('estado', 'aprobado')
                 ->whereMonth('fecha', $fecha->month)
                 ->whereYear('fecha', $fecha->year)
@@ -55,20 +51,19 @@ class DashboardController extends Controller
             ];
         }
 
-        // 2. Top 5 empleados con más horas (Barras horizontales)
-        $topEmpleados = HoraExtra::select('empleado_id', DB::raw('SUM(cantidad_horas) as total'))
+        $topEmpleadosRaw = HoraExtra::select('empleado_id', DB::raw('SUM(cantidad_horas) as total'))
             ->where('estado', 'aprobado')
             ->whereMonth('fecha', $mesActual)
             ->groupBy('empleado_id')
             ->orderByDesc('total')
             ->limit(5)
             ->with('empleado')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [$item->empleado->nombre_completo => (float) $item->total];
-            })->toArray();
+            ->get();
 
-        // 3. Datos para histograma (Lightweight Charts) - últimas 6 semanas del mes actual
+        $topEmpleados = $topEmpleadosRaw->mapWithKeys(function ($item) {
+            return [$item->empleado->nombre_completo => (float) $item->total];
+        })->toArray();
+
         $chartHistogram = collect();
         $seenWeeks = [];
         for ($i = 5; $i >= 0; $i--) {
@@ -91,14 +86,46 @@ class DashboardController extends Controller
         }
         $chartHistogram = $chartHistogram->toArray();
 
-        // 4. Últimas solicitudes pendientes (Tabla rápida)
         $ultimasPendientes = HoraExtra::with('empleado')
             ->where('estado', 'pendiente')
             ->orderBy('created_at', 'desc')
             ->take(5)
-            ->get();
+            ->get()->map(function ($he) {
+                return [
+                    'id' => $he->id,
+                    'fecha' => $he->fecha->toDateString(),
+                    'cantidad_horas' => $he->cantidad_horas,
+                    'tipo_hora_label' => $he->tipo_hora_label,
+                    'empleado' => [
+                        'nombre_completo' => $he->empleado->nombre_completo ?? 'N/A',
+                    ],
+                ];
+            })->toArray();
 
-        return view('dashboard.admin', compact('kpis', 'chartTendencia', 'topEmpleados', 'chartHistogram', 'ultimasPendientes'));
+        $distribucionPorTipo = HoraExtra::select('tipo_hora', DB::raw('SUM(cantidad_horas) as total'))
+            ->where('estado', 'aprobado')
+            ->whereMonth('fecha', $mesActual)
+            ->whereYear('fecha', $anioActual)
+            ->groupBy('tipo_hora')
+            ->get()
+            ->map(fn ($h) => [
+                'tipo' => $h->tipo_hora,
+                'label' => match ($h->tipo_hora) {
+                    'nocturna' => 'Nocturna',
+                    'feriado' => 'Feriado',
+                    default => 'Normal',
+                },
+                'total' => (float) $h->total,
+            ])->toArray();
+
+        return Inertia::render('Dashboard/Admin', [
+            'kpis' => $kpis,
+            'chartTendencia' => $chartTendencia,
+            'topEmpleados' => $topEmpleados,
+            'chartHistogram' => $chartHistogram,
+            'ultimasPendientes' => $ultimasPendientes,
+            'distribucionPorTipo' => $distribucionPorTipo,
+        ]);
     }
 
     private function dashboardEmpleado($user)
@@ -108,8 +135,16 @@ class DashboardController extends Controller
         $anioActual = now()->year;
 
         if (!$empleado_id) {
-            // Caso borde: usuario empleado sin perfil de empleado asociado
-            return view('dashboard.empleado_sin_perfil');
+            return Inertia::render('Dashboard/Empleado', [
+                'kpis' => [
+                    'mis_horas_mes' => 0,
+                    'mis_pendientes' => 0,
+                    'mis_rechazadas' => 0,
+                ],
+                'miHistorial' => [],
+                'miTendencia' => [],
+                'miDistribucionEstado' => [],
+            ]);
         }
 
         $kpis = [
@@ -118,24 +153,68 @@ class DashboardController extends Controller
                 ->whereMonth('fecha', $mesActual)
                 ->whereYear('fecha', $anioActual)
                 ->sum('cantidad_horas'),
-                
+
             'mis_pendientes' => HoraExtra::where('empleado_id', $empleado_id)
                 ->where('estado', 'pendiente')
                 ->count(),
-                
+
             'mis_rechazadas' => HoraExtra::where('empleado_id', $empleado_id)
                 ->where('estado', 'rechazado')
                 ->whereMonth('fecha', $mesActual)
                 ->count(),
         ];
 
-        // Historial reciente del empleado
         $miHistorial = HoraExtra::where('empleado_id', $empleado_id)
             ->orderBy('fecha', 'desc')
             ->take(10)
             ->with('turno')
-            ->get();
+            ->get()->map(function ($he) {
+                return [
+                    'id' => $he->id,
+                    'fecha' => $he->fecha->toDateString(),
+                    'cantidad_horas' => $he->cantidad_horas,
+                    'motivo' => $he->motivo,
+                    'estado' => $he->estado,
+                    'badge_class' => $he->badge_class,
+                ];
+            })->toArray();
 
-        return view('dashboard.empleado', compact('kpis', 'miHistorial'));
+        $miTendencia = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $fecha = now()->copy()->subMonths($i);
+            $total = HoraExtra::where('empleado_id', $empleado_id)
+                ->where('estado', 'aprobado')
+                ->whereMonth('fecha', $fecha->month)
+                ->whereYear('fecha', $fecha->year)
+                ->sum('cantidad_horas');
+            $miTendencia[] = [
+                'time'  => $fecha->format('Y-m-01'),
+                'value' => (float) $total,
+                'label' => $fecha->translatedFormat('M Y'),
+            ];
+        }
+
+        $miDistribucionEstado = HoraExtra::select('estado', DB::raw('COUNT(*) as total'))
+            ->where('empleado_id', $empleado_id)
+            ->whereMonth('fecha', $mesActual)
+            ->whereYear('fecha', $anioActual)
+            ->groupBy('estado')
+            ->get()
+            ->map(fn ($h) => [
+                'estado' => $h->estado,
+                'label' => match ($h->estado) {
+                    'aprobado' => 'Aprobadas',
+                    'rechazado' => 'Rechazadas',
+                    default => 'Pendientes',
+                },
+                'total' => (int) $h->total,
+            ])->toArray();
+
+        return Inertia::render('Dashboard/Empleado', [
+            'kpis' => $kpis,
+            'miHistorial' => $miHistorial,
+            'miTendencia' => $miTendencia,
+            'miDistribucionEstado' => $miDistribucionEstado,
+        ]);
     }
 }

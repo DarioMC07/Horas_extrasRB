@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Turno;
 use App\Models\Empleado;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class TurnosController extends Controller
 {
@@ -15,13 +16,34 @@ class TurnosController extends Controller
             ->orderBy('hora_inicio', 'desc')
             ->paginate(15);
 
-        return view('turnos.index', compact('turnos'));
-    }
+        $formatted = $turnos->getCollection()->map(function ($turno) {
+            return [
+                'id' => $turno->id,
+                'fecha' => $turno->fecha->toDateString(),
+                'hora_inicio' => $turno->hora_inicio,
+                'hora_fin' => $turno->hora_fin,
+                'tipo' => $turno->tipo,
+                'observaciones' => $turno->observaciones,
+                'empleado' => $turno->empleado ? [
+                    'id' => $turno->empleado->id,
+                    'nombre_completo' => $turno->empleado->nombre_completo,
+                ] : null,
+            ];
+        });
 
-    public function create()
-    {
-        $empleados = Empleado::activos()->orderBy('apellido')->get();
-        return view('turnos.create', compact('empleados'));
+        $turnos->setCollection($formatted);
+
+        $empleados = Empleado::activos()->orderBy('apellido')->get()->map(function ($emp) {
+            return [
+                'id' => $emp->id,
+                'nombre_completo' => $emp->nombre_completo,
+            ];
+        });
+
+        return Inertia::render('Turnos/Index', [
+            'turnos' => $turnos,
+            'empleados' => $empleados,
+        ]);
     }
 
     public function store(Request $request)
@@ -30,7 +52,7 @@ class TurnosController extends Controller
             'empleado_id'  => 'required|exists:empleados,id',
             'fecha'        => 'required|date',
             'hora_inicio'  => 'required|date_format:H:i',
-            'hora_fin'     => 'required|date_format:H:i|after:hora_inicio',
+            'hora_fin'     => 'required|date_format:H:i',
             'tipo'         => 'required|in:normal,nocturno,feriado',
             'observaciones'=> 'nullable|string|max:500',
         ]);
@@ -40,19 +62,13 @@ class TurnosController extends Controller
         return redirect()->route('turnos.index')->with('success', 'Turno registrado correctamente.');
     }
 
-    public function edit(Turno $turno)
-    {
-        $empleados = Empleado::activos()->orderBy('apellido')->get();
-        return view('turnos.edit', compact('turno', 'empleados'));
-    }
-
     public function update(Request $request, Turno $turno)
     {
         $validated = $request->validate([
             'empleado_id'  => 'required|exists:empleados,id',
             'fecha'        => 'required|date',
             'hora_inicio'  => 'required|date_format:H:i',
-            'hora_fin'     => 'required|date_format:H:i|after:hora_inicio',
+            'hora_fin'     => 'required|date_format:H:i',
             'tipo'         => 'required|in:normal,nocturno,feriado',
             'observaciones'=> 'nullable|string|max:500',
         ]);

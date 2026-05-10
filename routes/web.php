@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpleadosController;
 use App\Http\Controllers\HorasExtrasController;
+use App\Http\Controllers\NaturalQueryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\TurnosController;
@@ -28,6 +29,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // ── NaturalQuery Chat (Solo Gerentes) ──────────────────────
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/naturalquery/session', [NaturalQueryController::class, 'createSession'])->name('naturalquery.session');
+        Route::post('/naturalquery/query', [NaturalQueryController::class, 'query'])->name('naturalquery.query');
+    });
 
     // ── Administración (Solo Gerentes) ────────────────────────
     Route::middleware('role:admin')->group(function () {
