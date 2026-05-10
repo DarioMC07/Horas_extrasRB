@@ -47,11 +47,13 @@ export default function HorasExtrasIndex() {
                     <h1 className="text-2xl font-bold text-wise-black">Horas Extras</h1>
                     <p className="text-sm text-wise-gray">Gestión de solicitudes de horas extras</p>
                 </div>
-                <Button asChild className="bg-wise-green text-wise-black hover:bg-wise-green/90">
-                    <Link href={route('horas-extras.create')}>
-                        Nueva Solicitud
-                    </Link>
-                </Button>
+                {!isAdmin && (
+                    <Button asChild className="bg-wise-green text-wise-black hover:bg-wise-green/90">
+                        <Link href={route('horas-extras.create')}>
+                            Nueva Solicitud
+                        </Link>
+                    </Button>
+                )}
             </div>
 
             <div className="wise-card">
