@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\HoraExtra;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ReportesController extends Controller
 {
@@ -20,9 +21,48 @@ class ReportesController extends Controller
                   ->whereYear('fecha', date('Y', strtotime($request->mes)));
         }
 
-        $horasExtras = $query->orderBy('fecha', 'desc')->paginate(20);
+        if ($request->has('fecha_desde') && $request->fecha_desde != '') {
+            $query->where('fecha', '>=', $request->fecha_desde);
+        }
 
-        return view('reportes.index', compact('horasExtras'));
+        if ($request->has('fecha_hasta') && $request->fecha_hasta != '') {
+            $query->where('fecha', '<=', $request->fecha_hasta);
+        }
+
+        $formatted = $horasExtras->getCollection()->map(function ($he) {
+            return [
+                'id' => $he->id,
+                'fecha' => $he->fecha->toDateString(),
+                'cantidad_horas' => $he->cantidad_horas,
+                'tipo_hora' => $he->tipo_hora,
+                'tipo_hora_label' => $he->tipo_hora_label,
+                'estado' => $he->estado,
+                'empleado' => $he->empleado ? [
+                    'nombre_completo' => $he->empleado->nombre_completo,
+                    'cedula' => $he->empleado->cedula,
+                    'departamento' => $he->empleado->departamento,
+                ] : null,
+            ];
+        });
+
+        $horasExtras->setCollection($formatted);
+
+        $totalHoras = $query->sum('cantidad_horas');
+        $totalRegistros = $query->count();
+
+        return Inertia::render('Reportes/Index', [
+            'horasExtras' => $horasExtras,
+            'filters' => [
+                'fechaDesde' => $request->fecha_desde ?? now()->startOfMonth()->toDateString(),
+                'fechaHasta' => $request->fecha_hasta ?? now()->toDateString(),
+                'empleado' => $request->empleado ?? 'todos',
+                'estado' => $request->estado ?? 'todos',
+            ],
+            'totals' => [
+                'totalHoras' => $totalHoras,
+                'totalRegistros' => $totalRegistros,
+            ],
+        ]);
     }
 
     public function exportarCsv(Request $request)
@@ -32,9 +72,11 @@ class ReportesController extends Controller
         if ($request->has('estado') && $request->estado != '') {
             $query->where('estado', $request->estado);
         }
-        if ($request->has('mes') && $request->mes != '') {
-            $query->whereMonth('fecha', date('m', strtotime($request->mes)))
-                  ->whereYear('fecha', date('Y', strtotime($request->mes)));
+        if ($request->has('fecha_desde') && $request->fecha_desde != '') {
+            $query->where('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->has('fecha_hasta') && $request->fecha_hasta != '') {
+            $query->where('fecha', '<=', $request->fecha_hasta);
         }
 
         $horas = $query->orderBy('fecha', 'desc')->get();
@@ -49,7 +91,7 @@ class ReportesController extends Controller
         ];
 
         $columns = [
-            'ID', 'Empleado', 'Cedula', 'Fecha', 'Cantidad Horas', 
+            'ID', 'Empleado', 'Cedula', 'Fecha', 'Cantidad Horas',
             'Tipo Hora', 'Estado', 'Aprobado Por', 'Fecha Aprobacion', 'Motivo'
         ];
 
